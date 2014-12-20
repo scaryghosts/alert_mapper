@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title> Core Map</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta http-equiv="Expires" content="-1">
+  
+    <style type="text/css">
+      html { height: 100%; z-index: -1 }
+      body { height: 100%; margin: 0; padding: 0; position: relative }
+
+      #map-canvas { height: 100% }
+      #panel {
+        position: absolute;
+        top: 5px
+        left: 50%
+        margin-left: -180px;
+        z-index: 5;
+        background-color: #fff
+        padding: 5px;
+        border: 1px solid #999
+        }
+    </style>
+    <script type="text/javascript"
+      src="https://maps.googleapis.com/maps/api/js?sensor=false">
+    </script>
+    <script type="text/javascript"
+      src="../static/js/jquery-1.11.1.min.js">
+    </script>
+
+
+    <script type="text/javascript">
+    var alerts;
+    var alertcircle;
+    var map;
+    var ccCoords1;
+    var cc1;
+    var newMarker2;
+    var alertmarkers = [];
+    var styles = [
+                {
+                stylers: [
+                        { "saturation": 0 }
+                ]
+                }
+        ]
+
+    function initialize() {
+
+        var styledMap = new google.maps.StyledMapType(styles, {name: "Styled Map"});
+        var mapOptions = {
+          center: new google.maps.LatLng(40.442642, -79.959474),
+          zoom: 17,
+          mapTypeControlOptions: {
+                mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'map_style']
+          
+                }
+        };
+        map = new google.maps.Map(document.getElementById("map-canvas"),
+            mapOptions);
+      
+        map.mapTypes.set('map_style', styledMap);
+        map.setMapTypeId('map_style');
+        map.setOptions({sytles: styles});
+        
+        
+
+       {% if items %}
+           
+            {%for item in items %}
+            
+                alertcircle{{forloop.counter}} = new google.maps.Marker({
+                    position: new google.maps.LatLng({{item.Center}}),
+                    map: map,
+                    title: "{{item.Node}}",
+                    icon: "{{item.Icon}}"
+                   
+                    });
+            {% endfor %}
+        {% endif %}
+
+  
+
+        {% if connectitems %}
+            {% for c in connectitems %}
+                ccCoords{{forloop.counter}} = [
+                    new google.maps.LatLng({{c.Coord1}}),
+                    new google.maps.LatLng({{c.Coord2}})
+                ];
+
+                cc{{forloop.counter}} = new google.maps.Polyline({
+                    path: ccCoords{{forloop.counter}},
+                    strokeColor: '#000000',
+                    strokeOpacity: 1,
+                    strokeWeight: 1
+                });
+            {% endfor %}
+           addLines(); 
+            };
+
+            function addLines() {
+            {% for c in connectitems %}
+                cc{{forloop.counter}}.setMap(map);
+                
+            {% endfor %}
+            }
+            function removeLines() {
+            {% for c in connectitems %}
+                cc{{forloop.counter}}.setMap(null);
+            {% endfor %}
+            }
+           
+        {% endif %}        
+   
+           function newMarker(passed) {
+               lat = Number(passed.Lat);
+               lng = Number(passed.Lng);
+               
+               var m =  new google.maps.Marker({
+                   
+                    position: new google.maps.LatLng(lat,lng),
+                    map: map,
+                    icon: "../static/red-38px.png",
+                    title: passed.Node
+            })
+             alertmarkers.push(m)   
+       };
+
+           function refresher() {
+            $.each(alertmarkers, function() {
+                this.setMap(null)
+            });
+            alertmarkers = [];
+            $.ajax({
+                type: 'GET',
+                async: 'false',
+                global: 'false',
+                url: "alertjson",
+                headers: {Accept : 'application/json'},
+                dataType: 'json',
+                success: function(data) {
+                    $.each(data, function() {
+                        
+                        m = newMarker(this);
+                        
+                            
+                    }) 
+                    
+                },
+                error: function() {
+                    console.log("WELP, I errored during AJAX")
+                }
+               
+            });
+            setTimeout(refresher, 120000)
+        }
+        $(document).ready(function() {
+            setTimeout(refresher, 1000)
+        });
+            
+ 
+  
+        google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
+</head>
+
+<body>
+    <div id="panel">
+           <input onclick="removeLines();" type=button value="Links Off">
+           <input onclick="addLines();" type=button value="Links On">
+    </div>
+    <div id="map-canvas"/></div>
+</body>
+                
+

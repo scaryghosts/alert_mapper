@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title> Alert Mapper</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+      html { height: 100%; z-index: -1 }
+      body { height: 100%; margin: 5%; padding: 0; position: relative }
+
+      #map-canvas { height: 75% }
+    </style>
+    <script type="text/javascript"
+      src="https://maps.googleapis.com/maps/api/js?sensor=false">
+    </script>
+
+    <script type="text/javascript">
+
+    var alertcircle;
+
+    var styles = [
+                {
+                stylers: [
+                        { "saturation": -75 }
+                ]
+                }
+        ]
+
+    function initialize() {
+
+        var styledMap = new google.maps.StyledMapType(styles, {name: "Styled Map"});
+        var mapOptions = {
+          center: new google.maps.LatLng(40.44422, -79.95676),
+          zoom: 17,
+          mapTypeControlOptions: {
+                mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'map_style']
+          
+                }
+        };
+        var map = new google.maps.Map(document.getElementById("map-canvas"),
+            mapOptions);
+      
+        map.mapTypes.set('map_style', styledMap);
+        map.setMapTypeId('map_style');
+        map.setOptions({sytles: styles});
+
+
+       {% if items %}
+           
+            {%for item in items %}
+            
+                alertcircle{{forloop.counter}} = new google.maps.Marker({
+                    position: new google.maps.LatLng({{item.Center}}),
+                    map: map,
+                    title: "{{item.Node}}",
+                    icon: "../static/Playerstatus_online.png"
+                   
+                    });
+            {% endfor %}
+        {% endif %}
+    };
+
+        google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
+
+
+<body>
+    <div id="map-canvas"/></div>
+</body>
+                
+
